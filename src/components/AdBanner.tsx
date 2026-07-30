@@ -34,7 +34,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, theme = 'classic' 
     }
   }, [adUnit, adWidth, adHeight]);
 
-  // Theme-aware container styles
+  // Theme-aware styles
   const getThemeStyles = (t?: string) => {
     switch (t) {
       case 'dark':
@@ -60,7 +60,6 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, theme = 'classic' 
         position === 'bottom' ? 'relative z-40 ring-1 shadow-md my-0' : 'relative my-1'
       }`}
     >
-      {/* Ad Area directly mounting Kakao AdFit ins and script */}
       <div className={`relative p-1 flex justify-center items-center ${position === 'bottom' ? 'min-h-[102px]' : 'min-h-[52px]'}`}>
         <div
           ref={kakaoContainerRef}

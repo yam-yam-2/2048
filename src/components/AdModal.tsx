@@ -10,19 +10,19 @@ interface AdModalProps {
 
 export const AdModal: React.FC<AdModalProps> = ({ isOpen, actionType, onCloseAndProceed }) => {
   const kakaoContainerRef = useRef<HTMLDivElement>(null);
-  const [countdown, setCountdown] = useState<number>(2);
+  const [countdown, setCountdown] = useState<number>(3);
   const [canSkip, setCanSkip] = useState<boolean>(false);
 
   useEffect(() => {
     if (!isOpen) {
       setCanSkip(false);
-      setCountdown(2);
+      setCountdown(3);
       return;
     }
 
     sounds.playAdRefresh();
     setCanSkip(false);
-    setCountdown(2);
+    setCountdown(3);
 
     // Mount Kakao AdFit 300x250 tag directly
     if (kakaoContainerRef.current) {
@@ -54,7 +54,9 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, actionType, onCloseAnd
       });
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -67,12 +69,15 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, actionType, onCloseAnd
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
       <div className="bg-white rounded-2xl p-4 w-full max-w-[340px] flex flex-col items-center text-center shadow-2xl border border-amber-200/80 relative">
+        <div className="flex items-center gap-1.5 mb-2">
+          <span className="text-xs bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full">카카오 AdFit 보상형 광고</span>
+        </div>
         <p className="text-xs text-stone-700 mb-3 font-semibold">
-          광고 후 <strong className="text-amber-800">{messageText}</strong>
+          광고 시청 후 <strong className="text-amber-800">{messageText}</strong>
         </p>
 
         {/* 300x250 Ad Area Wrapper */}
-        <div className="w-[300px] h-[250px] bg-slate-50 rounded-xl overflow-hidden border border-slate-200 flex items-center justify-center relative shadow-inner">
+        <div className="w-[300px] h-[250px] bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center relative shadow-inner overflow-hidden">
           <div
             ref={kakaoContainerRef}
             className="w-[300px] h-[250px] flex items-center justify-center"
