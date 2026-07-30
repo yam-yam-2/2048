@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Volume2, VolumeX, Smartphone, Palette, Check, Download, HelpCircle } from 'lucide-react';
+import { X, Volume2, VolumeX, Smartphone, Palette, Check } from 'lucide-react';
 import { ThemeMode } from '../types';
 import { THEMES } from '../utils/theme';
 
@@ -8,11 +8,9 @@ interface SettingsModalProps {
   theme: ThemeMode;
   soundEnabled: boolean;
   hapticsEnabled: boolean;
-  canInstallPwa?: boolean;
   onThemeChange: (theme: ThemeMode) => void;
   onToggleSound: () => void;
   onToggleHaptics: () => void;
-  onInstallPwa?: () => void;
   onClose: () => void;
 }
 
@@ -21,11 +19,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   theme,
   soundEnabled,
   hapticsEnabled,
-  canInstallPwa,
   onThemeChange,
   onToggleSound,
   onToggleHaptics,
-  onInstallPwa,
   onClose,
 }) => {
   if (!isOpen) return null;
@@ -135,23 +131,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* Section 3: PWA Install option inside settings */}
-        <div className="mb-4 border-t border-stone-100 pt-3">
-          <button
-            onClick={() => {
-              if (onInstallPwa) onInstallPwa();
-            }}
-            className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
-          >
-            {canInstallPwa ? <Download className="w-4 h-4" /> : <HelpCircle className="w-4 h-4" />}
-            <span>{canInstallPwa ? '2048 원클릭 앱 설치' : '앱 설치 방법 안내 (PWA)'}</span>
-          </button>
-        </div>
-
         {/* Footer Close */}
         <button
           onClick={onClose}
-          className="w-full py-2.5 bg-stone-800 hover:bg-stone-900 active:scale-95 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md"
+          className="mt-4 w-full py-2.5 bg-stone-800 hover:bg-stone-900 active:scale-95 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md"
         >
           확인
         </button>

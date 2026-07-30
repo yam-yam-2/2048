@@ -1,4 +1,4 @@
-const CACHE_NAME = '2048-pwa-v2';
+const CACHE_NAME = '2048-pwa-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -10,10 +10,13 @@ const ASSETS_TO_CACHE = [
 
 // Install Event - Cache App Shell
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+      return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
+        console.warn('Cache addAll non-critical error:', err);
+      });
+    })
   );
 });
 
@@ -38,10 +41,10 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Skip non-HTTP(S) schemes like chrome-extension://
+  // Skip non-HTTP(S) schemes
   if (!url.protocol.startsWith('http')) return;
 
-  // For navigation requests (HTML page), use Network-First, fallback to cached index.html
+  // Navigation requests (HTML page)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -59,12 +62,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For static assets on same origin, Cache First with Network Fallback
+  // Local assets: Cache First with Network Revalidation
   if (url.origin === location.origin) {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         if (cachedResponse) {
-          // Revalidate in background
           fetch(event.request)
             .then((networkResponse) => {
               if (networkResponse && networkResponse.status === 200) {
@@ -87,7 +89,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Third-party requests (e.g. Kakao ads, fonts): Network First
+  // External requests
   event.respondWith(
     fetch(event.request).catch(() => caches.match(event.request))
   );

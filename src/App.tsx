@@ -11,8 +11,7 @@ import { AdBanner } from './components/AdBanner';
 import { AdModal } from './components/AdModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ConfirmModal } from './components/ConfirmModal';
-import { PwaInstallModal } from './components/PwaInstallModal';
-import { Download, CheckCircle2, Sparkles, X, PartyPopper, Trophy, Star } from 'lucide-react';
+import { Sparkles, X, PartyPopper, Trophy, Star } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -52,10 +51,9 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   // PWA Install Prompt State
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [canInstallPwa, setCanInstallPwa] = useState<boolean>(false);
-  const [pwaInstalledSuccess, setPwaInstalledSuccess] = useState<boolean>(false);
-  const [isPwaGuideOpen, setIsPwaGuideOpen] = useState<boolean>(false);
+  const [, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [, setCanInstallPwa] = useState<boolean>(false);
+  const [, setPwaInstalledSuccess] = useState<boolean>(false);
 
   // History stack for Undo feature
   const [history, setHistory] = useState<{ tiles: Tile[]; score: number }[]>([]);
@@ -126,21 +124,6 @@ export default function App() {
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
-
-  const handleInstallPwaClick = () => {
-    setIsPwaGuideOpen(true);
-  };
-
-  const handleExecuteNativeInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setCanInstallPwa(false);
-      setIsPwaGuideOpen(false);
-    }
-    setDeferredPrompt(null);
-  };
 
   // Theme change handler
   const handleThemeChange = (newTheme: ThemeMode) => {
@@ -466,29 +449,6 @@ export default function App() {
         </div>
       )}
 
-      {/* PWA Install Notification Bar */}
-      {canInstallPwa && (
-        <div className="w-full max-w-[420px] mx-auto mb-2 px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-xl shadow-sm flex items-center justify-between gap-2 animate-fade-in text-xs font-medium">
-          <div className="flex items-center gap-2 truncate">
-            <Download className="w-4 h-4 shrink-0 animate-bounce" />
-            <span className="truncate">홈 화면에 2048 앱을 설치하고 오프라인에서도 즐기세요!</span>
-          </div>
-          <button
-            onClick={handleInstallPwaClick}
-            className="px-2.5 py-1 bg-white text-emerald-800 font-bold rounded-lg hover:bg-emerald-50 active:scale-95 transition-all shrink-0 cursor-pointer text-xs"
-          >
-            설치하기
-          </button>
-        </div>
-      )}
-
-      {pwaInstalledSuccess && (
-        <div className="w-full max-w-[420px] mx-auto mb-2 px-3 py-2 bg-emerald-100 border border-emerald-300 text-emerald-900 rounded-xl shadow-xs flex items-center gap-2 text-xs font-bold animate-fade-in">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>PWA 앱 설치가 완료되었습니다! 언제든지 홈 화면에서 실행하세요.</span>
-        </div>
-      )}
-
       {/* Main Container */}
       <main className="w-full max-w-[440px] flex flex-col items-center flex-1 space-y-2 sm:space-y-3">
         {/* Header Section */}
@@ -498,14 +458,12 @@ export default function App() {
           gridSize={gridSize}
           soundEnabled={soundEnabled}
           canUndo={history.length > 0}
-          canInstallPwa={canInstallPwa}
           theme={theme}
           onGridSizeChange={handleGridSizeChangeRequest}
           onNewGameRequest={handleNewGameRequest}
           onUndo={handleUndoRequest}
           onToggleSound={handleToggleSound}
           onOpenSettings={() => setIsSettingsOpen(true)}
-          onInstallPwa={handleInstallPwaClick}
         />
 
         {/* Game Board */}
@@ -542,23 +500,10 @@ export default function App() {
         theme={theme}
         soundEnabled={soundEnabled}
         hapticsEnabled={hapticsEnabled}
-        canInstallPwa={canInstallPwa}
         onThemeChange={handleThemeChange}
         onToggleSound={handleToggleSound}
         onToggleHaptics={handleToggleHaptics}
-        onInstallPwa={() => {
-          setIsSettingsOpen(false);
-          handleInstallPwaClick();
-        }}
         onClose={() => setIsSettingsOpen(false)}
-      />
-
-      {/* PWA Install Modal & Guide */}
-      <PwaInstallModal
-        isOpen={isPwaGuideOpen}
-        canInstallNative={canInstallPwa}
-        onClose={() => setIsPwaGuideOpen(false)}
-        onInstallClick={handleExecuteNativeInstall}
       />
 
       {/* 300x250 Ad Modal for Undo & New Game */}

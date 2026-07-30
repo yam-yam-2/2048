@@ -1,5 +1,5 @@
 import React from 'react';
-import { RotateCcw, Volume2, VolumeX, Play, Trophy, Download, Settings } from 'lucide-react';
+import { RotateCcw, Volume2, VolumeX, Play, Trophy, Settings } from 'lucide-react';
 import { GridSize, ThemeMode } from '../types';
 import { THEMES } from '../utils/theme';
 
@@ -9,14 +9,12 @@ interface HeaderProps {
   gridSize: GridSize;
   soundEnabled: boolean;
   canUndo: boolean;
-  canInstallPwa?: boolean;
   theme: ThemeMode;
   onGridSizeChange: (newSize: GridSize) => void;
   onNewGameRequest: () => void;
   onUndo: () => void;
   onToggleSound: () => void;
   onOpenSettings: () => void;
-  onInstallPwa?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,14 +23,12 @@ export const Header: React.FC<HeaderProps> = ({
   gridSize,
   soundEnabled,
   canUndo,
-  canInstallPwa,
   theme,
   onGridSizeChange,
   onNewGameRequest,
   onUndo,
   onToggleSound,
   onOpenSettings,
-  onInstallPwa,
 }) => {
   const currentTheme = THEMES[theme] || THEMES.classic;
 
@@ -101,18 +97,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
-          {/* PWA Install Button */}
-          {canInstallPwa && (
-            <button
-              onClick={onInstallPwa}
-              title="앱으로 설치하기 (PWA)"
-              className="flex items-center gap-1 px-2 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer animate-pulse"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden xs:inline">앱 설치</span>
-            </button>
-          )}
-
           {/* Sound Toggle */}
           <button
             onClick={onToggleSound}
