@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Volume2, VolumeX, Smartphone, Palette, Check, Download } from 'lucide-react';
+import { X, Volume2, VolumeX, Smartphone, Palette, Check, Download, HelpCircle } from 'lucide-react';
 import { ThemeMode } from '../types';
 import { THEMES } from '../utils/theme';
 
@@ -136,19 +136,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Section 3: PWA Install option inside settings */}
-        {canInstallPwa && (
-          <div className="mb-4 border-t border-stone-100 pt-3">
-            <button
-              onClick={() => {
-                if (onInstallPwa) onInstallPwa();
-              }}
-              className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Download className="w-4 h-4" />
-              <span>2048 앱으로 설치하기 (PWA)</span>
-            </button>
-          </div>
-        )}
+        <div className="mb-4 border-t border-stone-100 pt-3">
+          <button
+            onClick={() => {
+              if (onInstallPwa) onInstallPwa();
+            }}
+            className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {canInstallPwa ? <Download className="w-4 h-4" /> : <HelpCircle className="w-4 h-4" />}
+            <span>{canInstallPwa ? '2048 원클릭 앱 설치' : '앱 설치 방법 안내 (PWA)'}</span>
+          </button>
+        </div>
 
         {/* Footer Close */}
         <button
