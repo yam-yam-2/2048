@@ -1,9 +1,11 @@
 import React, { useRef, useEffect } from 'react';
-import { Tile, GridSize, Direction } from '../types';
+import { Tile, GridSize, Direction, ThemeMode } from '../types';
+import { THEMES } from '../utils/theme';
 
 interface BoardProps {
   tiles: Tile[];
   gridSize: GridSize;
+  theme?: ThemeMode;
   onMove: (dir: Direction) => void;
   gameOver: boolean;
   won: boolean;
@@ -15,6 +17,7 @@ interface BoardProps {
 export const Board: React.FC<BoardProps> = ({
   tiles,
   gridSize,
+  theme = 'classic',
   onMove,
   gameOver,
   won,
@@ -24,6 +27,8 @@ export const Board: React.FC<BoardProps> = ({
 }) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const currentTheme = THEMES[theme] || THEMES.classic;
 
   // Keyboard navigation
   useEffect(() => {
@@ -83,36 +88,6 @@ export const Board: React.FC<BoardProps> = ({
     }
   };
 
-  // Helper for tile styling
-  const getTileStyleClass = (value: number) => {
-    switch (value) {
-      case 2:
-        return 'bg-[#EEE4DA] text-[#776E65]';
-      case 4:
-        return 'bg-[#EDE0C8] text-[#776E65]';
-      case 8:
-        return 'bg-[#F2B179] text-[#F9F6F2] font-bold';
-      case 16:
-        return 'bg-[#F59563] text-[#F9F6F2] font-bold';
-      case 32:
-        return 'bg-[#F67C5F] text-[#F9F6F2] font-bold';
-      case 64:
-        return 'bg-[#F65E3B] text-[#F9F6F2] font-bold';
-      case 128:
-        return 'bg-[#EDCF72] text-[#F9F6F2] font-bold shadow-xs';
-      case 256:
-        return 'bg-[#EDCC61] text-[#F9F6F2] font-bold shadow-xs';
-      case 512:
-        return 'bg-[#EDC850] text-[#F9F6F2] font-bold shadow-xs';
-      case 1024:
-        return 'bg-[#EDC53F] text-[#F9F6F2] font-bold shadow-sm';
-      case 2048:
-        return 'bg-[#EDC22E] text-[#F9F6F2] font-extrabold shadow-md ring-2 ring-amber-300 animate-pulse';
-      default:
-        return 'bg-[#3C3A32] text-[#F9F6F2] font-extrabold shadow-md';
-    }
-  };
-
   const getFontSizeClass = (value: number, size: GridSize) => {
     const digits = value.toString().length;
     if (size >= 6) {
@@ -154,7 +129,7 @@ export const Board: React.FC<BoardProps> = ({
         ref={boardRef}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className={`w-full aspect-square bg-[#BBADA0] rounded-2xl ${gapAndPadding} grid relative shadow-md touch-none overflow-hidden`}
+        className={`w-full aspect-square ${currentTheme.boardBg} rounded-2xl ${gapAndPadding} grid relative shadow-md touch-none overflow-hidden transition-colors duration-300`}
         style={{
           gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${gridSize}, minmax(0, 1fr))`,
@@ -164,7 +139,7 @@ export const Board: React.FC<BoardProps> = ({
         {emptyCells.map((cell) => (
           <div
             key={`bg-${cell.r}-${cell.c}`}
-            className="bg-[#CDC1B4]/70 rounded-lg sm:rounded-xl w-full h-full"
+            className={`${currentTheme.cellBg} rounded-lg sm:rounded-xl w-full h-full transition-colors duration-300`}
             style={{
               gridRowStart: cell.r + 1,
               gridColumnStart: cell.c + 1,
@@ -172,11 +147,11 @@ export const Board: React.FC<BoardProps> = ({
           />
         ))}
 
-        {/* Active Tile Items - Perfectly aligned to CSS Grid cells */}
+        {/* Active Tile Items */}
         {tiles.map((tile) => (
           <div
             key={tile.id}
-            className={`w-full h-full flex items-center justify-center rounded-lg sm:rounded-xl font-sans transition-all duration-100 ease-out z-10 ${getTileStyleClass(
+            className={`w-full h-full flex items-center justify-center rounded-lg sm:rounded-xl font-sans transition-all duration-100 ease-out z-10 ${currentTheme.getTileStyle(
               tile.value
             )} ${getFontSizeClass(tile.value, gridSize)} ${
               tile.isNew ? 'animate-scale-up' : ''
@@ -194,12 +169,12 @@ export const Board: React.FC<BoardProps> = ({
 
         {/* Game Over Overlay */}
         {gameOver && (
-          <div className="absolute inset-0 bg-[#FAF8EF]/85 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center z-30 animate-fade-in p-4 text-center">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#776E65] mb-2">게임 오버!</h2>
-            <p className="text-xs sm:text-sm text-[#776E65]/80 mb-5">더 이상 이동할 수 있는 타일이 없습니다.</p>
+          <div className="absolute inset-0 bg-black/75 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center z-30 animate-fade-in p-4 text-center text-white">
+            <h2 className="text-3xl sm:text-4xl font-extrabold mb-2">게임 오버!</h2>
+            <p className="text-xs sm:text-sm opacity-80 mb-5">더 이상 이동할 수 있는 타일이 없습니다.</p>
             <button
               onClick={onRestart}
-              className="px-5 py-2.5 bg-[#8F7A66] hover:bg-[#776E65] text-white font-bold text-sm rounded-xl shadow-md transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+              className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm rounded-xl shadow-md transition-transform hover:scale-105 active:scale-95 cursor-pointer"
             >
               다시 시도하기
             </button>

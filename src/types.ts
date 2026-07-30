@@ -1,5 +1,7 @@
 export type GridSize = 3 | 4 | 5 | 6 | 8;
 
+export type ThemeMode = 'classic' | 'dark' | 'pastel' | 'emerald' | 'sunset';
+
 export interface Tile {
   id: string;
   value: number;
@@ -33,3 +35,4 @@ export interface AdData {
   linkUrl: string;
   imageIcon: string;
 }
+
