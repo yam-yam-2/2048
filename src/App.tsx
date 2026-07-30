@@ -281,16 +281,9 @@ export default function App() {
           haptics.vibrateMove();
         }
 
-        // Check Milestone trigger (32 tile requested for test, or 2048)
-        const TEST_MILESTONE = 32;
-        if (!achievedMilestones.includes(TEST_MILESTONE) && nextTiles.some((t) => t.value >= TEST_MILESTONE)) {
-          setAchievedMilestones((prev) => [...prev, TEST_MILESTONE]);
-          triggerCelebration(TEST_MILESTONE);
-        }
-
-        // Win state at 2048
-        if (!won && nextTiles.some((t) => t.value >= 2048)) {
-          setWon(true);
+        // Milestone celebration when reaching 2048 tile
+        if (nextTiles.some((t) => t.value >= 2048)) {
+          if (!won) setWon(true);
           if (!achievedMilestones.includes(2048)) {
             setAchievedMilestones((prev) => [...prev, 2048]);
             triggerCelebration(2048);
