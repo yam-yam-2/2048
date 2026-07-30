@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ExternalLink, ShieldCheck } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { SAMPLE_ADS } from '../data/ads';
 import { ThemeMode } from '../types';
 
@@ -14,6 +14,10 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, customTitle, theme
   const [adFitLoaded, setAdFitLoaded] = useState<boolean>(false);
   const kakaoContainerRef = useRef<HTMLDivElement>(null);
 
+  const adUnit = position === 'bottom' ? 'DAN-U9DItSdCuBKgbZIK' : 'DAN-O77EOJHcnDXSBVHx';
+  const adWidth = '320';
+  const adHeight = position === 'bottom' ? '100' : '50';
+
   const loadKakaoAd = useCallback(() => {
     if (kakaoContainerRef.current) {
       kakaoContainerRef.current.innerHTML = '';
@@ -21,9 +25,9 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, customTitle, theme
       const ins = document.createElement('ins');
       ins.className = 'kakao_ad_area';
       ins.style.display = 'none';
-      ins.setAttribute('data-ad-unit', 'DAN-qOl4hJHrBY8KsZQF');
-      ins.setAttribute('data-ad-width', '320');
-      ins.setAttribute('data-ad-height', '100');
+      ins.setAttribute('data-ad-unit', adUnit);
+      ins.setAttribute('data-ad-width', adWidth);
+      ins.setAttribute('data-ad-height', adHeight);
 
       const script = document.createElement('script');
       script.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
@@ -34,7 +38,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, customTitle, theme
       kakaoContainerRef.current.appendChild(ins);
       kakaoContainerRef.current.appendChild(script);
     }
-  }, []);
+  }, [adUnit, adWidth, adHeight]);
 
   useEffect(() => {
     loadKakaoAd();
@@ -98,52 +102,41 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, customTitle, theme
       id={`ad-unit-${position}`}
       className={`w-full max-w-[420px] mx-auto rounded-xl border shadow-xs transition-all duration-300 overflow-hidden backdrop-blur-sm ${themeStyle.container} ${
         position === 'bottom'
-          ? 'sticky bottom-1 z-40 ring-1 shadow-md my-1'
-          : 'relative my-2'
+          ? 'relative z-40 ring-1 shadow-md my-0'
+          : 'relative my-1'
       }`}
     >
-      {/* Clean Top Header bar aligned with theme */}
-      <div className={`flex items-center justify-between px-2.5 py-1 border-b text-[10px] sm:text-[11px] font-medium transition-colors duration-300 ${themeStyle.headerBg}`}>
-        <div className="flex items-center gap-1.5 truncate">
-          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-bold text-[9px] sm:text-[10px] tracking-wide uppercase shrink-0 ${themeStyle.badgeBg}`}>
-            {customTitle || '스폰서 광고'}
-          </span>
-        </div>
-        <span className={`inline-flex items-center gap-1 text-[10px] shrink-0 ${themeStyle.shieldText}`}>
-          <ShieldCheck className="w-3 h-3 text-emerald-500 shrink-0" />
-          안전 검증
-        </span>
-      </div>
-
       {/* Main Ad Area */}
-      <div className="relative p-2 min-h-[92px] flex flex-col justify-center items-center">
+      <div className={`relative p-1 flex flex-col justify-center items-center ${position === 'bottom' ? 'min-h-[100px]' : 'min-h-[50px]'}`}>
         {/* Dynamic Kakao AdFit Container */}
         <div
           ref={kakaoContainerRef}
-          className={`flex justify-center items-center w-full min-h-[90px] ${
-            adFitLoaded ? 'block' : 'hidden'
-          }`}
+          className={`flex justify-center items-center w-full ${
+            adHeight === '100' ? 'min-h-[100px]' : 'min-h-[50px]'
+          } ${adFitLoaded ? 'block' : 'hidden'}`}
         />
 
         {/* Fallback / simulated ad card */}
         {!adFitLoaded && (
           <div
-            className={`w-full rounded-lg p-2.5 bg-gradient-to-r ${currentAd.bgGradient} ${currentAd.textColor} transition-all duration-300 relative overflow-hidden flex items-center justify-between group cursor-pointer shadow-2xs hover:shadow-xs gap-2`}
+            className={`w-full rounded-lg p-2 bg-gradient-to-r ${currentAd.bgGradient} ${currentAd.textColor} transition-all duration-300 relative overflow-hidden flex items-center justify-between group cursor-pointer shadow-2xs hover:shadow-xs gap-2`}
             onClick={() => window.open(currentAd.linkUrl, '_blank', 'noopener,noreferrer')}
           >
-            <div className="flex items-center gap-2.5 z-10 min-w-0 flex-1">
-              <div className="w-10 h-10 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shadow-inner shrink-0 group-hover:scale-105 transition-transform">
+            <div className="flex items-center gap-2 z-10 min-w-0 flex-1">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center text-lg shadow-inner shrink-0 group-hover:scale-105 transition-transform">
                 {currentAd.imageIcon}
               </div>
               <div className="flex flex-col text-left min-w-0 flex-1">
                 <div className="flex items-center gap-1 truncate">
                   <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-black/30 backdrop-blur-xs tracking-wide shrink-0">
-                    {currentAd.badge}
+                    AD
                   </span>
                   <span className="text-[10px] opacity-80 truncate">{currentAd.sponsor}</span>
                 </div>
-                <h4 className="font-bold text-xs sm:text-sm leading-tight truncate mt-0.5">{currentAd.title}</h4>
-                <p className="text-[10px] opacity-90 truncate leading-tight mt-0.5">{currentAd.description}</p>
+                <h4 className="font-bold text-xs leading-tight truncate mt-0.5">{currentAd.title}</h4>
+                {position === 'bottom' && (
+                  <p className="text-[10px] opacity-90 truncate leading-tight mt-0.5">{currentAd.description}</p>
+                )}
               </div>
             </div>
 

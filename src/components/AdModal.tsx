@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Sparkles, ExternalLink } from 'lucide-react';
+import { X, ExternalLink } from 'lucide-react';
 import { sounds } from '../utils/sound';
 
 interface AdModalProps {
@@ -33,7 +33,7 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, actionType, onCloseAnd
       const ins = document.createElement('ins');
       ins.className = 'kakao_ad_area';
       ins.style.display = 'none';
-      ins.setAttribute('data-ad-unit', 'DAN-plmF2YYYa6WbGatK');
+      ins.setAttribute('data-ad-unit', 'DAN-q47eRCmntbOzqMuf');
       ins.setAttribute('data-ad-width', '300');
       ins.setAttribute('data-ad-height', '250');
 
@@ -72,18 +72,7 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, actionType, onCloseAnd
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
       <div className="bg-white rounded-2xl p-4 w-full max-w-[340px] flex flex-col items-center text-center shadow-2xl border border-amber-200/80 relative">
-        {/* Header Title */}
-        <div className="flex items-center justify-between w-full mb-3 pb-2 border-b border-gray-100">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
-            <Sparkles className="w-4 h-4 text-amber-600 animate-spin" />
-            <span>스폰서 광고</span>
-          </div>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">
-            AD
-          </span>
-        </div>
-
-        <p className="text-xs text-gray-600 mb-3">
+        <p className="text-xs text-gray-600 mb-3 font-medium">
           광고 후 <strong className="text-amber-800">{messageText}</strong>
         </p>
 
@@ -113,7 +102,7 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, actionType, onCloseAnd
               <div className="z-10 my-auto">
                 <div className="text-3xl mb-1">🎮</div>
                 <h3 className="font-extrabold text-base leading-snug">
-                  2048 스폰서 맞춤 혜택
+                  2048 맞춤 혜택
                 </h3>
                 <p className="text-xs opacity-90 mt-1 leading-relaxed">
                   스마트한 모바일 퍼즐과 함께 만나는 특별 할인가 및 리워드!
@@ -121,7 +110,6 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, actionType, onCloseAnd
               </div>
 
               <div className="z-10 pt-2 border-t border-white/20 flex items-center justify-between text-[10px] opacity-80">
-                <span>추천 광고</span>
                 <span>AD</span>
               </div>
 

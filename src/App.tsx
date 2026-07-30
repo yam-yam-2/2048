@@ -392,7 +392,7 @@ export default function App() {
   return (
     <div
       ref={containerRef}
-      className={`min-h-screen ${currentTheme.appBg} flex flex-col items-center justify-between font-sans p-2 sm:p-4 transition-colors duration-300 selection:bg-amber-200 relative`}
+      className={`min-h-screen ${currentTheme.appBg} flex flex-col items-center justify-between font-sans p-2 sm:p-4 pb-36 sm:pb-40 transition-colors duration-300 selection:bg-amber-200 relative`}
     >
       {/* Grand Milestone Celebration Modal */}
       {milestoneBanner !== null && (
@@ -524,8 +524,8 @@ export default function App() {
         )}
       </main>
 
-      {/* Sticky Bottom Ad Unit */}
-      <footer className="w-full max-w-[440px] mt-auto pt-2">
+      {/* Always Visible Fixed Bottom Ad Unit */}
+      <footer className="w-full max-w-[440px] fixed bottom-0 left-1/2 -translate-x-1/2 z-40 px-2 pb-2 pt-1 pointer-events-auto">
         <AdBanner position="bottom" theme={theme} />
       </footer>
 
