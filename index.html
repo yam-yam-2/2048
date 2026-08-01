@@ -8,28 +8,30 @@
     <!-- Global Error Shield for Third-Party Ad Scripts in Sandboxed Iframe -->
     <script>
       (function() {
-        var isAdError = function(msg, url) {
-          var s = String(msg || '');
-          var u = String(url || '');
-          return s.indexOf('getAttribute') !== -1 ||
-                 s.indexOf('undefined is not an object') !== -1 ||
-                 s.indexOf('kakaocdn') !== -1 ||
-                 s.indexOf('adfit') !== -1 ||
-                 u.indexOf('kakaocdn') !== -1;
+        var isAdError = function(err) {
+          if (!err) return false;
+          var msg = String(err.message || err.reason || err || '');
+          var url = String(err.filename || err.script || err.source || '');
+          return msg.indexOf('getAttribute') !== -1 ||
+                 msg.indexOf('undefined is not an object') !== -1 ||
+                 msg.indexOf('kakaocdn') !== -1 ||
+                 msg.indexOf('adfit') !== -1 ||
+                 url.indexOf('kakaocdn') !== -1;
         };
         window.onerror = function(msg, url, line, col, error) {
-          if (isAdError(msg, url)) { return true; }
+          if (isAdError(msg) || isAdError(error) || isAdError(url)) { return true; }
         };
         window.addEventListener('error', function(e) {
-          if (isAdError(e.message, e.filename)) {
+          if (isAdError(e) || isAdError(e.message) || isAdError(e.error) || isAdError(e.filename)) {
             e.preventDefault();
             if (e.stopImmediatePropagation) e.stopImmediatePropagation();
             return true;
           }
         }, true);
         window.addEventListener('unhandledrejection', function(e) {
-          if (isAdError(e.reason)) {
+          if (isAdError(e) || isAdError(e.reason)) {
             e.preventDefault();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
           }
         });
       })();

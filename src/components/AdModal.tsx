@@ -25,35 +25,42 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, actionType, onCloseAnd
     setCountdown(3);
 
     const container = kakaoContainerRef.current;
+    let t1: ReturnType<typeof setTimeout> | undefined;
+
     if (container) {
       container.innerHTML = '';
 
       const ins = document.createElement('ins');
       ins.className = 'kakao_ad_area';
-      ins.style.display = 'inline-block';
-      ins.style.width = '300px';
-      ins.style.height = '250px';
+      ins.style.display = 'none';
       ins.setAttribute('data-ad-unit', 'DAN-q47eRCmntbOzqMuf');
       ins.setAttribute('data-ad-width', '300');
       ins.setAttribute('data-ad-height', '250');
 
       container.appendChild(ins);
 
-      // Load or trigger AdFit script safely
-      if (!document.querySelector('script[src*="kas/static/ba.min.js"]')) {
-        const script = document.createElement('script');
-        script.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
-        script.async = true;
-        document.head.appendChild(script);
-      } else {
+      const renderAdfit = () => {
+        if (!ins.isConnected) return;
         try {
           const globalAdfit = (window as unknown as { adfit?: { render?: () => void } }).adfit;
           if (globalAdfit && typeof globalAdfit.render === 'function') {
             globalAdfit.render();
           }
         } catch {
-          // Fallback safely
+          // ignore
         }
+      };
+
+      const existingScript = document.querySelector('script[src*="kas/static/ba.min.js"]');
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
+        script.async = true;
+        script.onload = () => renderAdfit();
+        document.head.appendChild(script);
+      } else {
+        renderAdfit();
+        t1 = setTimeout(renderAdfit, 100);
       }
     }
 
@@ -70,6 +77,7 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, actionType, onCloseAnd
 
     return () => {
       clearInterval(timer);
+      if (t1) clearTimeout(t1);
       if (container) {
         try {
           container.innerHTML = '';

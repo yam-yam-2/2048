@@ -16,27 +16,22 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, theme = 'classic' 
 
   useEffect(() => {
     const container = kakaoContainerRef.current;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
     if (container) {
       container.innerHTML = '';
 
       const ins = document.createElement('ins');
       ins.className = 'kakao_ad_area';
-      ins.style.display = 'inline-block';
-      ins.style.width = `${adWidth}px`;
-      ins.style.height = `${adHeight}px`;
+      ins.style.display = 'none';
       ins.setAttribute('data-ad-unit', adUnit);
       ins.setAttribute('data-ad-width', adWidth);
       ins.setAttribute('data-ad-height', adHeight);
 
       container.appendChild(ins);
 
-      // Load or trigger AdFit script safely
-      if (!document.querySelector('script[src*="kas/static/ba.min.js"]')) {
-        const script = document.createElement('script');
-        script.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
-        script.async = true;
-        document.head.appendChild(script);
-      } else {
+      const renderAdfit = () => {
+        if (!ins.isConnected) return;
         try {
           const globalAdfit = (window as unknown as { adfit?: { render?: () => void } }).adfit;
           if (globalAdfit && typeof globalAdfit.render === 'function') {
@@ -45,10 +40,23 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, theme = 'classic' 
         } catch {
           // ignore
         }
+      };
+
+      const existingScript = document.querySelector('script[src*="kas/static/ba.min.js"]');
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
+        script.async = true;
+        script.onload = () => renderAdfit();
+        document.head.appendChild(script);
+      } else {
+        renderAdfit();
+        timer = setTimeout(renderAdfit, 100);
       }
     }
 
     return () => {
+      if (timer) clearTimeout(timer);
       if (container) {
         try {
           container.innerHTML = '';
