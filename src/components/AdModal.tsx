@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Sparkles, Award } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 import { sounds } from '../utils/sound';
 
 interface AdModalProps {
@@ -25,7 +25,8 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, actionType, onCloseAnd
     setCountdown(3);
 
     const container = kakaoContainerRef.current;
-    let t1: ReturnType<typeof setTimeout> | undefined;
+    let timerId1: ReturnType<typeof setTimeout> | undefined;
+    let timerId2: ReturnType<typeof setTimeout> | undefined;
 
     if (container) {
       container.innerHTML = '';
@@ -37,31 +38,12 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, actionType, onCloseAnd
       ins.setAttribute('data-ad-width', '300');
       ins.setAttribute('data-ad-height', '250');
 
+      const script = document.createElement('script');
+      script.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
+      script.async = true;
+
       container.appendChild(ins);
-
-      const renderAdfit = () => {
-        if (!ins.isConnected) return;
-        try {
-          const globalAdfit = (window as unknown as { adfit?: { render?: () => void } }).adfit;
-          if (globalAdfit && typeof globalAdfit.render === 'function') {
-            globalAdfit.render();
-          }
-        } catch {
-          // ignore
-        }
-      };
-
-      const existingScript = document.querySelector('script[src*="kas/static/ba.min.js"]');
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
-        script.async = true;
-        script.onload = () => renderAdfit();
-        document.head.appendChild(script);
-      } else {
-        renderAdfit();
-        t1 = setTimeout(renderAdfit, 100);
-      }
+      container.appendChild(script);
     }
 
     const timer = setInterval(() => {
@@ -77,7 +59,8 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, actionType, onCloseAnd
 
     return () => {
       clearInterval(timer);
-      if (t1) clearTimeout(t1);
+      if (timerId1) clearTimeout(timerId1);
+      if (timerId2) clearTimeout(timerId2);
       if (container) {
         try {
           container.innerHTML = '';
@@ -107,13 +90,11 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, actionType, onCloseAnd
           스폰서 광고 시청 후 <strong className="text-amber-800">{messageText}</strong>
         </p>
 
-        {/* 300x250 Ad Container with fallback preview */}
-        <div className="w-[300px] h-[250px] bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-200/70 flex items-center justify-center relative shadow-inner overflow-hidden">
-          {/* Background Fallback Banner if ad script is blocked or loading */}
-          <div className="absolute inset-0 p-4 flex flex-col items-center justify-center text-amber-900/60 pointer-events-none">
-            <Award className="w-10 h-10 mb-2 text-amber-500/80 animate-bounce" />
-            <span className="text-xs font-bold text-amber-900">2048 PUZZLE GAME</span>
-            <p className="text-[10px] text-amber-700/80 mt-1">최고 기록 갱신에 도전하세요!</p>
+        {/* 300x250 Ad Container */}
+        <div className="w-[300px] h-[250px] bg-stone-100 dark:bg-stone-800 rounded-xl border border-stone-200/80 flex items-center justify-center relative shadow-inner overflow-hidden">
+          {/* Subtle loading spinner behind the ad */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-6 h-6 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
 
           <div

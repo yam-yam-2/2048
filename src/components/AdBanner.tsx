@@ -16,53 +16,46 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, theme = 'classic' 
 
   useEffect(() => {
     const container = kakaoContainerRef.current;
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (!container) return;
 
-    if (container) {
-      container.innerHTML = '';
+    container.innerHTML = '';
 
-      const ins = document.createElement('ins');
-      ins.className = 'kakao_ad_area';
-      ins.style.display = 'none';
-      ins.setAttribute('data-ad-unit', adUnit);
-      ins.setAttribute('data-ad-width', adWidth);
-      ins.setAttribute('data-ad-height', adHeight);
+    const ins = document.createElement('ins');
+    ins.className = 'kakao_ad_area';
+    ins.style.display = 'none';
+    ins.setAttribute('data-ad-unit', adUnit);
+    ins.setAttribute('data-ad-width', adWidth);
+    ins.setAttribute('data-ad-height', adHeight);
 
-      container.appendChild(ins);
+    container.appendChild(ins);
 
-      const renderAdfit = () => {
-        if (!ins.isConnected) return;
-        try {
-          const globalAdfit = (window as unknown as { adfit?: { render?: () => void } }).adfit;
-          if (globalAdfit && typeof globalAdfit.render === 'function') {
-            globalAdfit.render();
-          }
-        } catch {
-          // ignore
+    const renderAd = () => {
+      try {
+        const globalAdfit = (window as unknown as { adfit?: { render?: () => void } }).adfit;
+        if (globalAdfit && typeof globalAdfit.render === 'function') {
+          globalAdfit.render();
         }
-      };
-
-      const existingScript = document.querySelector('script[src*="kas/static/ba.min.js"]');
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
-        script.async = true;
-        script.onload = () => renderAdfit();
-        document.head.appendChild(script);
-      } else {
-        renderAdfit();
-        timer = setTimeout(renderAdfit, 100);
+      } catch {
+        // ignore
       }
+    };
+
+    const existingScript = document.querySelector('script[src*="kas/static/ba.min.js"]');
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
+      script.async = true;
+      script.onload = () => renderAd();
+      document.head.appendChild(script);
+    } else {
+      renderAd();
     }
 
     return () => {
-      if (timer) clearTimeout(timer);
-      if (container) {
-        try {
-          container.innerHTML = '';
-        } catch {
-          // ignore
-        }
+      try {
+        container.innerHTML = '';
+      } catch {
+        // ignore
       }
     };
   }, [adUnit, adWidth, adHeight]);
