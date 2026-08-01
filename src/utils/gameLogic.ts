@@ -18,39 +18,14 @@ export function getEmptyPositions(tiles: Tile[], size: GridSize): { row: number;
   return empty;
 }
 
-export function addRandomTile(tiles: Tile[], size: GridSize): Tile[] {
+export function addRandomTile(tiles: Tile[], size: GridSize, value?: number): Tile[] {
   const empty = getEmptyPositions(tiles, size);
   if (empty.length === 0) return tiles;
 
   const randomSpot = empty[Math.floor(Math.random() * empty.length)];
 
-  // Calculate max tile currently on board
-  const maxTile = tiles.length > 0 ? Math.max(...tiles.map((t) => t.value)) : 2;
-
-  // Build candidate numbers up to maxTile/2 (capped at 64, minimum 2)
-  const candidates: number[] = [2];
-  const capLimit = Math.min(maxTile <= 4 ? 4 : Math.floor(maxTile / 2), 64);
-
-  let val = 4;
-  while (val <= capLimit) {
-    candidates.push(val);
-    val *= 2;
-  }
-
-  // Calculate exponentially decaying weights so smaller numbers appear much more frequently
-  const weights = candidates.map((_, idx) => Math.pow(0.32, idx));
-  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-
-  let rand = Math.random() * totalWeight;
-  let selectedValue = 2;
-
-  for (let i = 0; i < candidates.length; i++) {
-    if (rand < weights[i]) {
-      selectedValue = candidates[i];
-      break;
-    }
-    rand -= weights[i];
-  }
+  // Standard 2048 rules: 90% chance of 2, 10% chance of 4, or specified value
+  const selectedValue = value !== undefined ? value : (Math.random() < 0.9 ? 2 : 4);
 
   const newTile: Tile = {
     id: generateTileId(),
@@ -65,8 +40,9 @@ export function addRandomTile(tiles: Tile[], size: GridSize): Tile[] {
 
 export function initializeBoard(size: GridSize): Tile[] {
   let tiles: Tile[] = [];
-  tiles = addRandomTile(tiles, size);
-  tiles = addRandomTile(tiles, size);
+  // Start initial board strictly with 2s
+  tiles = addRandomTile(tiles, size, 2);
+  tiles = addRandomTile(tiles, size, 2);
   return tiles;
 }
 

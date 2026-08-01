@@ -4,7 +4,7 @@
   "description": "클래식 2048 숫자 퍼즐 게임 - 오프라인 PWA 지원",
   "start_url": "/",
   "scope": "/",
-  "id": "com.classic2048.puzzle",
+  "id": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
   "background_color": "#FAF8EF",
@@ -17,13 +17,25 @@
       "src": "/pwa-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/pwa-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
@@ -32,7 +44,7 @@
       "short_name": "새 게임",
       "description": "2048 퍼즐 게임을 새로 시작합니다.",
       "url": "/?action=new",
-      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

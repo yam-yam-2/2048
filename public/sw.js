@@ -1,5 +1,5 @@
-const CACHE_NAME = '2048-pwa-v3';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = '2048-pwa-v4';
+const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
@@ -8,19 +8,19 @@ const ASSETS_TO_CACHE = [
   '/pwa-icon.svg'
 ];
 
-// Install Event - Cache App Shell
+// Install Event - Pre-cache core shell
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
-        console.warn('Cache addAll non-critical error:', err);
+      return cache.addAll(STATIC_ASSETS).catch((err) => {
+        console.warn('PWA Pre-cache non-critical notice:', err);
       });
     })
   );
 });
 
-// Activate Event - Clean old caches
+// Activate Event - Clean old caches and claim clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -35,16 +35,17 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event - Network First with Cache Fallback for navigation and local static assets
+// Fetch Event - Stale-while-revalidate for local assets, network-first for navigation
 self.addEventListener('fetch', (event) => {
+  // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // Skip non-HTTP(S) schemes
+  // Ignore non-http/https requests (e.g. chrome-extension://)
   if (!url.protocol.startsWith('http')) return;
 
-  // Navigation requests (HTML page)
+  // 1. Navigation requests (HTML page) -> Network First, fall back to Cache
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -62,35 +63,36 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Local assets: Cache First with Network Revalidation
+  // 2. Same-origin assets (JS, CSS, Images, Fonts) -> Cache First with Network update
   if (url.origin === location.origin) {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          fetch(event.request)
-            .then((networkResponse) => {
-              if (networkResponse && networkResponse.status === 200) {
-                caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
-              }
-            })
-            .catch(() => {});
-          return cachedResponse;
-        }
+        const fetchPromise = fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              const responseToCache = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+            }
+            return networkResponse;
+          })
+          .catch(() => cachedResponse);
 
-        return fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
-          }
-          return networkResponse;
-        });
+        return cachedResponse || fetchPromise;
       })
     );
     return;
   }
 
-  // External requests
+  // 3. Third-party assets -> Network with cache fallback
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+        }
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
