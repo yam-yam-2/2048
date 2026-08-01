@@ -11,7 +11,7 @@ import { AdBanner } from './components/AdBanner';
 import { AdModal } from './components/AdModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ConfirmModal } from './components/ConfirmModal';
-import { Sparkles, X, PartyPopper, Trophy, Star, Download, Smartphone } from 'lucide-react';
+import { Sparkles, X, PartyPopper, Trophy, Star, Download } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -555,7 +555,7 @@ export default function App() {
 
       {/* Main Container */}
       <main className="w-full max-w-[440px] flex flex-col items-center flex-1 space-y-2 sm:space-y-3">
-        {/* PWA Prompt Banner for Samsung Internet / Android */}
+        {/* PWA Prompt Banner for Samsung Internet / Android (only when install prompt is triggered) */}
         {canInstallPwa && (
           <div className="w-full bg-gradient-to-r from-amber-700 to-amber-800 text-white p-2.5 sm:p-3 rounded-2xl shadow-lg flex items-center justify-between gap-2 border border-amber-600 animate-fade-in">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -563,8 +563,8 @@ export default function App() {
                 <Download className="w-5 h-5 text-amber-100" />
               </div>
               <div className="min-w-0">
-                <p className="font-extrabold text-xs text-amber-100">삼성 브라우저 앱 설치</p>
-                <p className="text-[11px] text-amber-200/90 truncate">홈 화면에 2048을 추가하고 빠르게 플레이해보세요!</p>
+                <p className="font-extrabold text-xs text-amber-100">2048 앱 설치하기</p>
+                <p className="text-[11px] text-amber-200/90 truncate">홈 화면에 2048을 추가하고 바로 플레이해보세요!</p>
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0">

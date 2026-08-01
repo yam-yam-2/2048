@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Volume2, VolumeX, Smartphone, Palette, Check, Trophy, Award, Gamepad2 } from 'lucide-react';
+import { X, Volume2, VolumeX, Smartphone, Palette, Check, Trophy, Award, Gamepad2, Download } from 'lucide-react';
 import { ThemeMode } from '../types';
 import { THEMES } from '../utils/theme';
 
