@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThemeMode } from '../types';
 
 interface AdBannerProps {
@@ -8,65 +8,19 @@ interface AdBannerProps {
 }
 
 export const AdBanner: React.FC<AdBannerProps> = ({ position, theme = 'classic' }) => {
-  const kakaoContainerRef = useRef<HTMLDivElement>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const adUnit = position === 'bottom' ? 'DAN-U9DItSdCuBKgbZIK' : 'DAN-O77EOJHcnDXSBVHx';
   const adWidth = '320';
   const adHeight = position === 'bottom' ? '100' : '50';
 
+  // Auto refresh every 50 seconds
   useEffect(() => {
-    const container = kakaoContainerRef.current;
-    if (!container) return;
-
-    const loadAd = () => {
-      if (!container) return;
-      container.innerHTML = '';
-
-      const ins = document.createElement('ins');
-      ins.className = 'kakao_ad_area';
-      ins.style.display = 'none';
-      ins.setAttribute('data-ad-unit', adUnit);
-      ins.setAttribute('data-ad-width', adWidth);
-      ins.setAttribute('data-ad-height', adHeight);
-
-      container.appendChild(ins);
-
-      try {
-        const globalAdfit = (window as unknown as { adfit?: { render?: () => void } }).adfit;
-        if (globalAdfit && typeof globalAdfit.render === 'function') {
-          globalAdfit.render();
-        }
-      } catch {
-        // ignore
-      }
-    };
-
-    // Initial ad load
-    loadAd();
-
-    const existingScript = document.querySelector('script[src*="kas/static/ba.min.js"]');
-    if (!existingScript) {
-      const script = document.createElement('script');
-      script.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
-      script.async = true;
-      script.onload = () => loadAd();
-      document.head.appendChild(script);
-    }
-
-    // Auto-refresh ad every 50 seconds
-    const refreshInterval = setInterval(() => {
-      loadAd();
+    const timer = setInterval(() => {
+      setRefreshKey((prev) => prev + 1);
     }, 50000);
-
-    return () => {
-      clearInterval(refreshInterval);
-      try {
-        if (container) container.innerHTML = '';
-      } catch {
-        // ignore
-      }
-    };
-  }, [adUnit, adWidth, adHeight]);
+    return () => clearInterval(timer);
+  }, []);
 
   // Theme-aware styles
   const getThemeStyles = (t?: string) => {
@@ -87,6 +41,34 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, theme = 'classic' 
 
   const containerStyle = getThemeStyles(theme);
 
+  const srcDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: transparent;
+    }
+  </style>
+</head>
+<body>
+  <ins class="kakao_ad_area" style="display:none;"
+    data-ad-unit="${adUnit}"
+    data-ad-width="${adWidth}"
+    data-ad-height="${adHeight}"></ins>
+  <script type="text/javascript" src="https://t1.kakaocdn.net/kas/static/ba.min.js" async></script>
+</body>
+</html>`;
+
   return (
     <div
       id={`ad-unit-${position}`}
@@ -95,9 +77,20 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, theme = 'classic' 
       }`}
     >
       <div className={`relative p-1 flex justify-center items-center ${position === 'bottom' ? 'min-h-[102px]' : 'min-h-[52px]'}`}>
-        <div
-          ref={kakaoContainerRef}
-          className="flex justify-center items-center w-full min-h-[50px]"
+        <iframe
+          key={`${position}-${refreshKey}`}
+          srcDoc={srcDoc}
+          width={adWidth}
+          height={adHeight}
+          title={`Kakao AdBanner ${position}`}
+          style={{
+            border: 'none',
+            overflow: 'hidden',
+            width: `${adWidth}px`,
+            height: `${adHeight}px`,
+            backgroundColor: 'transparent',
+          }}
+          scrolling="no"
         />
       </div>
     </div>
