@@ -194,7 +194,7 @@ export default function App() {
   // PWA beforeinstallprompt event listener
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
+      // Do not preventDefault() so browser native URL bar install icon remains visible
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setCanInstallPwa(true);
     };

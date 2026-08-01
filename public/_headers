@@ -1,7 +1,14 @@
 /sw.js
   Cache-Control: no-cache, no-store, must-revalidate
   Content-Type: application/javascript; charset=utf-8
+  Service-Worker-Allowed: /
 
 /manifest.json
   Content-Type: application/manifest+json; charset=utf-8
   Access-Control-Allow-Origin: *
+
+/pwa-192.png
+  Content-Type: image/png
+
+/pwa-512.png
+  Content-Type: image/png

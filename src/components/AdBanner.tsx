@@ -18,18 +18,19 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, theme = 'classic' 
     const container = kakaoContainerRef.current;
     if (!container) return;
 
-    container.innerHTML = '';
+    const loadAd = () => {
+      if (!container) return;
+      container.innerHTML = '';
 
-    const ins = document.createElement('ins');
-    ins.className = 'kakao_ad_area';
-    ins.style.display = 'none';
-    ins.setAttribute('data-ad-unit', adUnit);
-    ins.setAttribute('data-ad-width', adWidth);
-    ins.setAttribute('data-ad-height', adHeight);
+      const ins = document.createElement('ins');
+      ins.className = 'kakao_ad_area';
+      ins.style.display = 'none';
+      ins.setAttribute('data-ad-unit', adUnit);
+      ins.setAttribute('data-ad-width', adWidth);
+      ins.setAttribute('data-ad-height', adHeight);
 
-    container.appendChild(ins);
+      container.appendChild(ins);
 
-    const renderAd = () => {
       try {
         const globalAdfit = (window as unknown as { adfit?: { render?: () => void } }).adfit;
         if (globalAdfit && typeof globalAdfit.render === 'function') {
@@ -40,20 +41,27 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, theme = 'classic' 
       }
     };
 
+    // Initial ad load
+    loadAd();
+
     const existingScript = document.querySelector('script[src*="kas/static/ba.min.js"]');
     if (!existingScript) {
       const script = document.createElement('script');
       script.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
       script.async = true;
-      script.onload = () => renderAd();
+      script.onload = () => loadAd();
       document.head.appendChild(script);
-    } else {
-      renderAd();
     }
 
+    // Auto-refresh ad every 50 seconds
+    const refreshInterval = setInterval(() => {
+      loadAd();
+    }, 50000);
+
     return () => {
+      clearInterval(refreshInterval);
       try {
-        container.innerHTML = '';
+        if (container) container.innerHTML = '';
       } catch {
         // ignore
       }
