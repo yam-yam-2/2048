@@ -15,23 +15,48 @@ export const AdBanner: React.FC<AdBannerProps> = ({ position, theme = 'classic' 
   const adHeight = position === 'bottom' ? '100' : '50';
 
   useEffect(() => {
-    if (kakaoContainerRef.current) {
-      kakaoContainerRef.current.innerHTML = '';
+    const container = kakaoContainerRef.current;
+    if (container) {
+      container.innerHTML = '';
 
       const ins = document.createElement('ins');
       ins.className = 'kakao_ad_area';
-      ins.style.display = 'none';
+      ins.style.display = 'inline-block';
+      ins.style.width = `${adWidth}px`;
+      ins.style.height = `${adHeight}px`;
       ins.setAttribute('data-ad-unit', adUnit);
       ins.setAttribute('data-ad-width', adWidth);
       ins.setAttribute('data-ad-height', adHeight);
 
-      const script = document.createElement('script');
-      script.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
-      script.async = true;
+      container.appendChild(ins);
 
-      kakaoContainerRef.current.appendChild(ins);
-      kakaoContainerRef.current.appendChild(script);
+      // Load or trigger AdFit script safely
+      if (!document.querySelector('script[src*="kas/static/ba.min.js"]')) {
+        const script = document.createElement('script');
+        script.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
+        script.async = true;
+        document.head.appendChild(script);
+      } else {
+        try {
+          const globalAdfit = (window as unknown as { adfit?: { render?: () => void } }).adfit;
+          if (globalAdfit && typeof globalAdfit.render === 'function') {
+            globalAdfit.render();
+          }
+        } catch {
+          // ignore
+        }
+      }
     }
+
+    return () => {
+      if (container) {
+        try {
+          container.innerHTML = '';
+        } catch {
+          // ignore
+        }
+      }
+    };
   }, [adUnit, adWidth, adHeight]);
 
   // Theme-aware styles

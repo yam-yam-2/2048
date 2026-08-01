@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Volume2, VolumeX, Smartphone, Palette, Check } from 'lucide-react';
+import { X, Volume2, VolumeX, Smartphone, Palette, Check, Trophy, Award, Gamepad2 } from 'lucide-react';
 import { ThemeMode } from '../types';
 import { THEMES } from '../utils/theme';
 
@@ -8,6 +8,9 @@ interface SettingsModalProps {
   theme: ThemeMode;
   soundEnabled: boolean;
   hapticsEnabled: boolean;
+  maxTile: number;
+  bestScore: number;
+  totalGames: number;
   onThemeChange: (theme: ThemeMode) => void;
   onToggleSound: () => void;
   onToggleHaptics: () => void;
@@ -19,6 +22,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   theme,
   soundEnabled,
   hapticsEnabled,
+  maxTile,
+  bestScore,
+  totalGames,
   onThemeChange,
   onToggleSound,
   onToggleHaptics,
@@ -35,7 +41,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="p-1.5 rounded-lg bg-amber-100 text-amber-800">
               <Palette className="w-5 h-5" />
             </div>
-            <h3 className="font-extrabold text-base text-stone-800">게임 설정</h3>
+            <h3 className="font-extrabold text-base text-stone-800">게임 설정 및 통계</h3>
           </div>
           <button
             onClick={onClose}
@@ -43,6 +49,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Section 0: Player Stats Record */}
+        <div className="mb-5">
+          <label className="block text-xs font-bold text-stone-600 mb-2 uppercase tracking-wide">
+            나의 플레이 기록
+          </label>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="p-2.5 rounded-xl bg-amber-50/90 border border-amber-200/80 flex flex-col items-center justify-center">
+              <Trophy className="w-4 h-4 text-amber-600 mb-1" />
+              <span className="text-[10px] text-amber-900 font-semibold">최고 점수</span>
+              <strong className="text-xs font-black text-amber-950 truncate max-w-full">{bestScore}</strong>
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-amber-50/90 border border-amber-200/80 flex flex-col items-center justify-center">
+              <Award className="w-4 h-4 text-amber-600 mb-1" />
+              <span className="text-[10px] text-amber-900 font-semibold">최고 타일</span>
+              <strong className="text-xs font-black text-amber-950 truncate max-w-full">{maxTile > 0 ? maxTile : '-'}</strong>
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-amber-50/90 border border-amber-200/80 flex flex-col items-center justify-center">
+              <Gamepad2 className="w-4 h-4 text-amber-600 mb-1" />
+              <span className="text-[10px] text-amber-900 font-semibold">총 판 수</span>
+              <strong className="text-xs font-black text-amber-950 truncate max-w-full">{totalGames}</strong>
+            </div>
+          </div>
         </div>
 
         {/* Section 1: Theme Select */}

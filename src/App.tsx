@@ -18,10 +18,43 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+// Helper to load persisted game state
+const loadSavedGameState = () => {
+  try {
+    const raw = localStorage.getItem('2048_game_state');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.tiles) && parsed.tiles.length > 0) {
+        return parsed;
+      }
+    }
+  } catch {
+    // fallback
+  }
+  return null;
+};
+
 export default function App() {
-  const [gridSize, setGridSize] = useState<GridSize>(4);
-  const [tiles, setTiles] = useState<Tile[]>([]);
-  const [score, setScore] = useState<number>(0);
+  const savedState = loadSavedGameState();
+
+  const [gridSize, setGridSize] = useState<GridSize>(() => {
+    if (savedState && [3, 4, 5, 6].includes(savedState.gridSize)) {
+      return savedState.gridSize as GridSize;
+    }
+    try {
+      const saved = localStorage.getItem('2048_grid_size');
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if ([3, 4, 5, 6].includes(parsed)) return parsed as GridSize;
+      }
+    } catch {
+      // fallback
+    }
+    return 4;
+  });
+
+  const [tiles, setTiles] = useState<Tile[]>(() => savedState?.tiles || []);
+  const [score, setScore] = useState<number>(() => savedState?.score ?? 0);
   const [bestScore, setBestScore] = useState<number>(() => {
     try {
       return parseInt(localStorage.getItem('2048_best') || '0', 10);
@@ -29,14 +62,43 @@ export default function App() {
       return 0;
     }
   });
-  const [gameOver, setGameOver] = useState<boolean>(false);
-  const [won, setWon] = useState<boolean>(false);
-  const [keepPlaying, setKeepPlaying] = useState<boolean>(false);
-  const [moveCount, setMoveCount] = useState<number>(0);
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [maxTile, setMaxTile] = useState<number>(() => {
+    try {
+      return parseInt(localStorage.getItem('2048_max_tile') || '0', 10);
+    } catch {
+      return 0;
+    }
+  });
+  const [totalGames, setTotalGames] = useState<number>(() => {
+    try {
+      return parseInt(localStorage.getItem('2048_total_games') || '0', 10);
+    } catch {
+      return 0;
+    }
+  });
 
-  // Track achieved milestone values (e.g., 32, 2048) in current game to prevent duplicate celebratory triggers
-  const [achievedMilestones, setAchievedMilestones] = useState<number[]>([]);
+  const [gameOver, setGameOver] = useState<boolean>(() => savedState?.gameOver ?? false);
+  const [won, setWon] = useState<boolean>(() => savedState?.won ?? false);
+  const [keepPlaying, setKeepPlaying] = useState<boolean>(() => savedState?.keepPlaying ?? false);
+  const [moveCount, setMoveCount] = useState<number>(() => savedState?.moveCount ?? 0);
+
+  // Settings: Sound, Theme & Haptics Persistent Values
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('2048_sound');
+      if (saved !== null) {
+        const val = JSON.parse(saved);
+        sounds.enabled = val;
+        return val;
+      }
+    } catch {
+      // fallback
+    }
+    return true;
+  });
+
+  // Track achieved milestone values (e.g., 32, 2048) in current game
+  const [achievedMilestones, setAchievedMilestones] = useState<number[]>(() => savedState?.achievedMilestones || []);
   const [milestoneBanner, setMilestoneBanner] = useState<number | null>(null);
 
   // Settings: Theme & Haptics
@@ -47,7 +109,19 @@ export default function App() {
       return 'classic';
     }
   });
-  const [hapticsEnabled, setHapticsEnabled] = useState<boolean>(haptics.enabled);
+  const [hapticsEnabled, setHapticsEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('2048_haptics');
+      if (saved !== null) {
+        const val = JSON.parse(saved);
+        haptics.enabled = val;
+        return val;
+      }
+    } catch {
+      // fallback
+    }
+    return haptics.enabled;
+  });
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   // PWA Install Prompt State
@@ -56,7 +130,7 @@ export default function App() {
   const [, setPwaInstalledSuccess] = useState<boolean>(false);
 
   // History stack for Undo feature
-  const [history, setHistory] = useState<{ tiles: Tile[]; score: number }[]>([]);
+  const [history, setHistory] = useState<{ tiles: Tile[]; score: number }[]>(() => savedState?.history || []);
 
   // Ad Modal State for Undo & New Game
   const [adModalConfig, setAdModalConfig] = useState<{
@@ -140,10 +214,19 @@ export default function App() {
     const nextVal = !hapticsEnabled;
     haptics.enabled = nextVal;
     setHapticsEnabled(nextVal);
+    try {
+      localStorage.setItem('2048_haptics', JSON.stringify(nextVal));
+    } catch {
+      // LocalStorage fallback
+    }
     if (nextVal) {
       haptics.vibrateMove();
     }
   };
+
+  // Track new record state
+  const [isNewRecordAlert, setIsNewRecordAlert] = useState<boolean>(false);
+  const [hasNewRecordTriggered, setHasNewRecordTriggered] = useState<boolean>(false);
 
   // Initialize new game
   const startNewGame = useCallback((size: GridSize) => {
@@ -158,12 +241,68 @@ export default function App() {
     setHistory([]);
     setAchievedMilestones([]);
     setMilestoneBanner(null);
+    setHasNewRecordTriggered(false);
+    setIsNewRecordAlert(false);
+
+    try {
+      localStorage.setItem('2048_grid_size', size.toString());
+    } catch {
+      // LocalStorage fallback
+    }
+
+    setTotalGames((prev) => {
+      const next = prev + 1;
+      try {
+        localStorage.setItem('2048_total_games', next.toString());
+      } catch {
+        // LocalStorage fallback
+      }
+      return next;
+    });
   }, []);
 
-  // Initial load
+  // Initial load - start new game only if no saved state exists
   useEffect(() => {
-    startNewGame(4);
-  }, [startNewGame]);
+    if (tiles.length === 0) {
+      startNewGame(gridSize);
+    }
+  }, [gridSize, startNewGame, tiles.length]);
+
+  // Persist active game state whenever relevant parameters change
+  useEffect(() => {
+    if (tiles.length === 0) return;
+    try {
+      const gameState = {
+        gridSize,
+        tiles,
+        score,
+        gameOver,
+        won,
+        keepPlaying,
+        moveCount,
+        history,
+        achievedMilestones,
+      };
+      localStorage.setItem('2048_game_state', JSON.stringify(gameState));
+    } catch (e) {
+      console.error('Failed to persist game state:', e);
+    }
+  }, [gridSize, tiles, score, gameOver, won, keepPlaying, moveCount, history, achievedMilestones]);
+
+  // Track max tile value achieved across games
+  useEffect(() => {
+    if (tiles.length > 0) {
+      const currentMax = Math.max(...tiles.map((t) => t.value), 0);
+      if (currentMax > maxTile) {
+        setMaxTile(currentMax);
+        try {
+          localStorage.setItem('2048_max_tile', currentMax.toString());
+        } catch {
+          // LocalStorage fallback
+        }
+      }
+    }
+  }, [tiles, maxTile]);
 
   // Viewport Height calculation for mid-ad
   const calculateSpaceForMidAd = useCallback(() => {
@@ -189,57 +328,12 @@ export default function App() {
     }
   }, [score, bestScore]);
 
-  // Fire celebratory effect for milestones (32 or 2048)
+  // Fire celebratory floating banner for milestones (4, 8, 16, 32, 64, etc.)
   const triggerCelebration = useCallback((targetValue: number) => {
-    sounds.playMilestone();
-    haptics.vibrateMilestone();
-
-    // Multi-stage Explosive Confetti Sequence
-    try {
-      // Stage 1: Left & Right Cannons
-      confetti({
-        particleCount: 80,
-        angle: 60,
-        spread: 70,
-        origin: { x: 0.05, y: 0.65 },
-        colors: ['#FFD700', '#FF4500', '#10B981', '#3B82F6', '#EC4899', '#8B5CF6'],
-      });
-      confetti({
-        particleCount: 80,
-        angle: 120,
-        spread: 70,
-        origin: { x: 0.95, y: 0.65 },
-        colors: ['#FFD700', '#FF4500', '#10B981', '#3B82F6', '#EC4899', '#8B5CF6'],
-      });
-
-      // Stage 2 (250ms): Center Starburst
-      setTimeout(() => {
-        confetti({
-          particleCount: 110,
-          spread: 110,
-          origin: { y: 0.45 },
-          shapes: ['star', 'circle'],
-          colors: ['#FFD700', '#F59E0B', '#FFFFFF', '#EC4899', '#3B82F6'],
-          scalar: 1.25,
-        });
-      }, 250);
-
-      // Stage 3 (600ms): Golden Rain Shower
-      setTimeout(() => {
-        confetti({
-          particleCount: 80,
-          spread: 130,
-          origin: { y: 0.15 },
-          colors: ['#FFD700', '#F59E0B', '#FEF08A'],
-          gravity: 0.7,
-          ticks: 280,
-        });
-      }, 600);
-    } catch {
-      // Ignore
-    }
-
     setMilestoneBanner(targetValue);
+    setTimeout(() => {
+      setMilestoneBanner(null);
+    }, 3000);
   }, []);
 
   // Handle Tile Move
@@ -261,6 +355,29 @@ export default function App() {
         setScore(newScore);
         setMoveCount((prev) => prev + 1);
 
+        // Check for Best Score New Record
+        if (newScore > bestScore && bestScore > 0 && !hasNewRecordTriggered) {
+          setHasNewRecordTriggered(true);
+          setIsNewRecordAlert(true);
+          sounds.playNewRecord();
+
+          // Gold burst for new record
+          try {
+            confetti({
+              particleCount: 60,
+              spread: 80,
+              origin: { y: 0.2 },
+              colors: ['#FFD700', '#F59E0B', '#FBBF24'],
+            });
+          } catch {
+            // ignore
+          }
+
+          setTimeout(() => {
+            setIsNewRecordAlert(false);
+          }, 4000);
+        }
+
         // Sound & Haptics for regular move / merge
         if (result.mergedValues.length > 0) {
           const maxMerged = Math.max(...result.mergedValues);
@@ -271,13 +388,18 @@ export default function App() {
           haptics.vibrateMove();
         }
 
-        // Milestone celebration when reaching 2048 tile
-        if (nextTiles.some((t) => t.value >= 2048)) {
-          if (!won) setWon(true);
-          if (!achievedMilestones.includes(2048)) {
-            setAchievedMilestones((prev) => [...prev, 2048]);
-            triggerCelebration(2048);
+        // Check for first-time achieved tile milestones in current game (4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048...)
+        const milestoneValues = [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192];
+        const presentMilestones = milestoneValues.filter((val) => nextTiles.some((t) => t.value === val));
+        const newMilestones = presentMilestones.filter((val) => !achievedMilestones.includes(val));
+
+        if (newMilestones.length > 0) {
+          setAchievedMilestones((prev) => [...prev, ...newMilestones]);
+          const highestNew = Math.max(...newMilestones);
+          if (highestNew >= 2048 && !won) {
+            setWon(true);
           }
+          triggerCelebration(highestNew);
         }
 
         if (!canMove(nextTiles, gridSize)) {
@@ -287,7 +409,7 @@ export default function App() {
         }
       }
     },
-    [tiles, gridSize, score, gameOver, won, keepPlaying, achievedMilestones, triggerCelebration]
+    [tiles, gridSize, score, gameOver, won, keepPlaying, achievedMilestones, triggerCelebration, bestScore, hasNewRecordTriggered]
   );
 
   // Undo Move
@@ -326,6 +448,11 @@ export default function App() {
     setSoundEnabled((prev) => {
       const next = !prev;
       sounds.enabled = next;
+      try {
+        localStorage.setItem('2048_sound', JSON.stringify(next));
+      } catch {
+        // LocalStorage fallback
+      }
       if (next) sounds.playMove();
       return next;
     });
@@ -384,67 +511,28 @@ export default function App() {
       ref={containerRef}
       className={`min-h-screen ${currentTheme.appBg} flex flex-col items-center justify-between font-sans p-2 sm:p-4 pb-36 sm:pb-40 transition-colors duration-300 selection:bg-amber-200 relative`}
     >
-      {/* Grand Milestone Celebration Modal */}
+      {/* Floating New Record Celebration Banner (Theme Matched) */}
+      {isNewRecordAlert && (
+        <div className="fixed top-4 z-50 animate-bounce transition-all duration-300 pointer-events-none">
+          <div className={`${currentTheme.bannerBg} font-black px-4.5 py-2.5 rounded-full shadow-2xl border-2 flex items-center gap-2 text-xs sm:text-sm backdrop-blur-xs`}>
+            <Trophy className="w-4 h-4 text-amber-300 fill-amber-400 animate-spin shrink-0" />
+            <span>NEW RECORD! 🎉 최고 점수 갱신 ({score}점)</span>
+            <Sparkles className="w-4 h-4 shrink-0" />
+          </div>
+        </div>
+      )}
+
+      {/* Floating Milestone Celebration Banner (Theme Matched) */}
       {milestoneBanner !== null && (
-        <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-          <div className="w-full max-w-sm bg-gradient-to-b from-stone-900 via-stone-850 to-stone-900 text-white rounded-3xl p-6 shadow-2xl border-2 border-amber-400/60 flex flex-col items-center text-center relative overflow-hidden animate-scale-up">
-            {/* Ambient radiant background glow */}
-            <div className="absolute -top-16 -left-16 w-36 h-36 bg-amber-500/20 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-16 -right-16 w-36 h-36 bg-orange-500/20 rounded-full blur-2xl pointer-events-none" />
-
-            {/* Close Button */}
-            <button
-              onClick={() => setMilestoneBanner(null)}
-              className="absolute top-3.5 right-3.5 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-stone-300 transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            {/* Top Trophy & Sparks Badge */}
-            <div className="relative mb-3">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-0.5 shadow-lg shadow-amber-500/30 flex items-center justify-center animate-bounce">
-                <div className="w-full h-full bg-stone-900 rounded-[14px] flex items-center justify-center">
-                  <Trophy className="w-8 h-8 text-amber-400" />
-                </div>
-              </div>
-              <div className="absolute -top-1 -right-1 text-amber-300 animate-pulse">
-                <Sparkles className="w-5 h-5" />
-              </div>
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-bold tracking-wider uppercase mb-2">
-              <PartyPopper className="w-3.5 h-3.5" />
-              축하합니다! 마일스톤 달성
-            </div>
-
-            <h3 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-300 to-orange-400 mb-1">
-              {milestoneBanner} 타일 완성!
-            </h3>
-
-            <p className="text-xs text-stone-300 mb-5 leading-relaxed">
-              엄청난 실력이군요! <span className="text-amber-300 font-bold">{milestoneBanner}</span> 타일을 만들어냈습니다.
-            </p>
-
-            {/* Giant Tile Preview Badge */}
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 p-1 shadow-xl shadow-amber-500/40 mb-6 flex items-center justify-center">
-              <div className="w-full h-full bg-stone-900/90 backdrop-blur-xs rounded-xl flex flex-col items-center justify-center">
-                <span className="text-3xl font-black text-amber-300 tracking-tight drop-shadow-md">
-                  {milestoneBanner}
-                </span>
-                <span className="text-[10px] text-amber-200/80 font-semibold uppercase tracking-widest mt-0.5">
-                  VICTORY
-                </span>
-              </div>
-            </div>
-
-            {/* Continue Action Button */}
-            <button
-              onClick={() => setMilestoneBanner(null)}
-              className="w-full py-3.5 px-6 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white font-black text-sm rounded-2xl shadow-lg shadow-amber-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Star className="w-4 h-4 fill-current text-yellow-200" />
-              계속 게임하기
-            </button>
+        <div className="fixed top-16 z-50 animate-bounce transition-all duration-300 pointer-events-none">
+          <div className={`${currentTheme.bannerBg} font-black px-4.5 py-2 rounded-full shadow-2xl border-2 flex items-center gap-2 text-xs sm:text-sm backdrop-blur-xs`}>
+            <PartyPopper className="w-4 h-4 shrink-0" />
+            <span>🎉 최초 달성!</span>
+            <span className={`px-2.5 py-0.5 rounded-md text-xs font-black shadow-xs ${currentTheme.getTileStyle(milestoneBanner)}`}>
+              {milestoneBanner}
+            </span>
+            <span>타일 완성</span>
+            <Sparkles className="w-4 h-4 shrink-0" />
           </div>
         </div>
       )}
@@ -500,6 +588,9 @@ export default function App() {
         theme={theme}
         soundEnabled={soundEnabled}
         hapticsEnabled={hapticsEnabled}
+        maxTile={maxTile}
+        bestScore={bestScore}
+        totalGames={totalGames}
         onThemeChange={handleThemeChange}
         onToggleSound={handleToggleSound}
         onToggleHaptics={handleToggleHaptics}

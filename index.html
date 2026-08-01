@@ -4,6 +4,36 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>2048 클래식 퍼즐</title>
+
+    <!-- Global Error Shield for Third-Party Ad Scripts in Sandboxed Iframe -->
+    <script>
+      (function() {
+        var isAdError = function(msg, url) {
+          var s = String(msg || '');
+          var u = String(url || '');
+          return s.indexOf('getAttribute') !== -1 ||
+                 s.indexOf('undefined is not an object') !== -1 ||
+                 s.indexOf('kakaocdn') !== -1 ||
+                 s.indexOf('adfit') !== -1 ||
+                 u.indexOf('kakaocdn') !== -1;
+        };
+        window.onerror = function(msg, url, line, col, error) {
+          if (isAdError(msg, url)) { return true; }
+        };
+        window.addEventListener('error', function(e) {
+          if (isAdError(e.message, e.filename)) {
+            e.preventDefault();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+        window.addEventListener('unhandledrejection', function(e) {
+          if (isAdError(e.reason)) {
+            e.preventDefault();
+          }
+        });
+      })();
+    </script>
     
     <!-- PWA Manifest & Theme -->
     <link rel="manifest" href="/manifest.json" />

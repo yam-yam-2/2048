@@ -8,6 +8,7 @@ export interface ThemeConfig {
   cellBg: string;
   headerBoxBg: string;
   headerAccent: string;
+  bannerBg: string;
   getTileStyle: (value: number) => string;
 }
 
@@ -20,6 +21,7 @@ export const THEMES: Record<ThemeMode, ThemeConfig> = {
     cellBg: 'bg-[#CDC1B4]/70',
     headerBoxBg: 'bg-[#8F7A66]',
     headerAccent: 'bg-amber-200 text-amber-900 border-amber-300',
+    bannerBg: 'bg-[#8F7A66] text-[#F9F6F2] border-[#776E65]',
     getTileStyle: (value: number) => {
       switch (value) {
         case 2:
@@ -58,6 +60,7 @@ export const THEMES: Record<ThemeMode, ThemeConfig> = {
     cellBg: 'bg-slate-700/50',
     headerBoxBg: 'bg-slate-700',
     headerAccent: 'bg-indigo-900 text-indigo-200 border-indigo-700',
+    bannerBg: 'bg-slate-800 text-slate-100 border-indigo-500/80',
     getTileStyle: (value: number) => {
       switch (value) {
         case 2:
@@ -96,6 +99,7 @@ export const THEMES: Record<ThemeMode, ThemeConfig> = {
     cellBg: 'bg-white/70',
     headerBoxBg: 'bg-pink-400',
     headerAccent: 'bg-pink-200 text-pink-900 border-pink-300',
+    bannerBg: 'bg-pink-300 text-pink-950 border-pink-400',
     getTileStyle: (value: number) => {
       switch (value) {
         case 2:
@@ -134,6 +138,7 @@ export const THEMES: Record<ThemeMode, ThemeConfig> = {
     cellBg: 'bg-emerald-900/40',
     headerBoxBg: 'bg-emerald-700',
     headerAccent: 'bg-teal-200 text-teal-950 border-teal-300',
+    bannerBg: 'bg-emerald-800 text-emerald-100 border-emerald-500',
     getTileStyle: (value: number) => {
       switch (value) {
         case 2:
@@ -172,6 +177,7 @@ export const THEMES: Record<ThemeMode, ThemeConfig> = {
     cellBg: 'bg-stone-600/50',
     headerBoxBg: 'bg-orange-700',
     headerAccent: 'bg-orange-200 text-orange-950 border-orange-300',
+    bannerBg: 'bg-orange-600 text-orange-50 border-orange-400',
     getTileStyle: (value: number) => {
       switch (value) {
         case 2:

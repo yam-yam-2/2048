@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
           </p>
         </div>
 
-        {/* Scores & Settings button */}
+        {/* Scores & Buttons */}
         <div className="flex items-center gap-1.5 shrink-0">
           <div className={`${currentTheme.headerBoxBg} text-white px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl text-center min-w-[56px] sm:min-w-[64px] shadow-xs flex flex-col justify-center`}>
             <span className="text-[9px] sm:text-[10px] font-bold opacity-80 uppercase tracking-wider">SCORE</span>
