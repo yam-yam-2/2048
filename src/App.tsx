@@ -11,7 +11,7 @@ import { AdBanner } from './components/AdBanner';
 import { AdModal } from './components/AdModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ConfirmModal } from './components/ConfirmModal';
-import { Sparkles, X, PartyPopper, Trophy, Star } from 'lucide-react';
+import { Sparkles, X, PartyPopper, Trophy, Star, Download, Smartphone } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -125,9 +125,25 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   // PWA Install Prompt State
-  const [, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [, setCanInstallPwa] = useState<boolean>(false);
-  const [, setPwaInstalledSuccess] = useState<boolean>(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [canInstallPwa, setCanInstallPwa] = useState<boolean>(false);
+  const [pwaInstalledSuccess, setPwaInstalledSuccess] = useState<boolean>(false);
+
+  const handleInstallPwa = async () => {
+    if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          setPwaInstalledSuccess(true);
+        }
+        setDeferredPrompt(null);
+        setCanInstallPwa(false);
+      } catch {
+        // ignore
+      }
+    }
+  };
 
   // History stack for Undo feature
   const [history, setHistory] = useState<{ tiles: Tile[]; score: number }[]>(() => savedState?.history || []);
@@ -539,6 +555,42 @@ export default function App() {
 
       {/* Main Container */}
       <main className="w-full max-w-[440px] flex flex-col items-center flex-1 space-y-2 sm:space-y-3">
+        {/* PWA Prompt Banner for Samsung Internet / Android */}
+        {canInstallPwa && (
+          <div className="w-full bg-gradient-to-r from-amber-700 to-amber-800 text-white p-2.5 sm:p-3 rounded-2xl shadow-lg flex items-center justify-between gap-2 border border-amber-600 animate-fade-in">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-2 bg-amber-600/80 rounded-xl shrink-0">
+                <Download className="w-5 h-5 text-amber-100" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-extrabold text-xs text-amber-100">삼성 브라우저 앱 설치</p>
+                <p className="text-[11px] text-amber-200/90 truncate">홈 화면에 2048을 추가하고 빠르게 플레이해보세요!</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                onClick={handleInstallPwa}
+                className="px-3 py-1.5 bg-white text-amber-900 font-black text-xs rounded-xl shadow-xs hover:bg-amber-100 active:scale-95 transition-all cursor-pointer"
+              >
+                설치
+              </button>
+              <button
+                onClick={() => setCanInstallPwa(false)}
+                className="p-1 text-amber-300 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {pwaInstalledSuccess && (
+          <div className="w-full bg-emerald-700 text-white p-2.5 sm:p-3 rounded-2xl shadow-lg flex items-center gap-2 border border-emerald-500 text-xs font-bold animate-fade-in">
+            <Sparkles className="w-4 h-4 text-emerald-200 shrink-0" />
+            <span>앱 설치가 완료되었습니다! 홈 화면에서 바로 실행할 수 있습니다.</span>
+          </div>
+        )}
+
         {/* Header Section */}
         <Header
           score={score}

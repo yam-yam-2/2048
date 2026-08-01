@@ -4,20 +4,15 @@
   "description": "클래식 2048 숫자 퍼즐 게임 - PWA 오프라인 지원",
   "start_url": "/",
   "scope": "/",
-  "id": "/",
+  "id": "com.classic2048.app",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
   "background_color": "#FAF8EF",
   "theme_color": "#8F7A66",
   "orientation": "portrait",
+  "prefer_related_applications": false,
   "categories": ["games", "puzzle"],
   "icons": [
-    {
-      "src": "/pwa-icon.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
     {
       "src": "/pwa-192.png",
       "sizes": "192x192",
